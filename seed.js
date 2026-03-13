@@ -36,8 +36,18 @@ const meds = [
   },
   {
     name: 'Klonopin 1mg',
+    category: 'morning',
+    instructions: null,
+  },
+  {
+    name: 'Klonopin 1mg',
+    category: 'evening',
+    instructions: null,
+  },
+  {
+    name: 'Klonopin 1mg',
     category: 'as_needed',
-    instructions: '1mg 2x a day and one more as needed for amxiety.',
+    instructions: 'Take only if needed. Do not exceed prescribed daily dose.',
   },
   {
     name: 'Ambien 10mg',
