@@ -19,13 +19,22 @@
       <div id="progress-display" class="progress"></div>
     </div>
     <div id="refresh-indicator" class="refresh-indicator" aria-live="polite"></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="today" role="tab" aria-selected="true">Today</button>
+      <button class="tab" data-tab="history" role="tab" aria-selected="false">History</button>
+    </nav>
   </header>
 
-  <main id="app">
-    <div class="loading">Loading medications...</div>
+  <main>
+    <div id="app" role="tabpanel">
+      <div class="loading">Loading medications...</div>
+    </div>
+    <div id="history-panel" role="tabpanel" hidden>
+      <div class="loading">Loading history...</div>
+    </div>
   </main>
 
-  <footer>
+  <footer id="footer">
     <p>Updates automatically every 30 seconds</p>
   </footer>
 

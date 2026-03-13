@@ -208,6 +208,117 @@ async function handleTake(medId, medName, btn) {
   }
 }
 
+// ── History ───────────────────────────────────────────────────────────────────
+
+const historyPanel = document.getElementById('history-panel');
+const footer       = document.getElementById('footer');
+
+const CATEGORY_LABEL = { morning: 'Morning', evening: 'Evening', as_needed: 'As Needed' };
+
+function renderHistory(logs, days) {
+  historyPanel.innerHTML = '';
+
+  // Controls row
+  const controls = document.createElement('div');
+  controls.className = 'history-controls';
+  controls.innerHTML = `
+    <label for="days-select">Show last</label>
+    <select id="days-select">
+      <option value="7"  ${days === 7  ? 'selected' : ''}>7 days</option>
+      <option value="14" ${days === 14 ? 'selected' : ''}>14 days</option>
+      <option value="30" ${days === 30 ? 'selected' : ''}>30 days</option>
+      <option value="90" ${days === 90 ? 'selected' : ''}>90 days</option>
+    </select>
+  `;
+  controls.querySelector('select').addEventListener('change', (e) => {
+    fetchHistory(Number(e.target.value));
+  });
+  historyPanel.appendChild(controls);
+
+  if (logs.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'history-empty';
+    empty.textContent = 'No medications logged in this period.';
+    historyPanel.appendChild(empty);
+    return;
+  }
+
+  // Group by date
+  const byDate = {};
+  for (const log of logs) {
+    if (!byDate[log.date]) byDate[log.date] = [];
+    byDate[log.date].push(log);
+  }
+
+  for (const date of Object.keys(byDate).sort().reverse()) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'history-day';
+
+    const header = document.createElement('div');
+    header.className = 'history-day-header';
+    header.textContent = formatDate(date);
+    dayEl.appendChild(header);
+
+    for (const log of byDate[date]) {
+      const row = document.createElement('div');
+      row.className = 'history-row';
+
+      const dot = document.createElement('div');
+      dot.className = `history-dot${log.category === 'as_needed' ? ' as-needed' : ''}`;
+
+      const name = document.createElement('div');
+      name.className = 'history-med-name';
+      name.textContent = log.name;
+
+      const cat = document.createElement('div');
+      cat.className = 'history-category';
+      cat.textContent = CATEGORY_LABEL[log.category] || log.category;
+
+      const time = document.createElement('div');
+      time.className = 'history-time';
+      time.textContent = formatTime(log.taken_at);
+
+      row.append(dot, name, cat, time);
+      dayEl.appendChild(row);
+    }
+
+    historyPanel.appendChild(dayEl);
+  }
+}
+
+async function fetchHistory(days = 14) {
+  historyPanel.innerHTML = '<div class="loading">Loading history...</div>';
+  try {
+    const res = await fetch(`/api/history?days=${days}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const logs = await res.json();
+    renderHistory(logs, days);
+  } catch (err) {
+    console.error('Failed to load history:', err);
+    historyPanel.innerHTML = '<div class="error-banner">Could not load history. Please try again.</div>';
+  }
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+    });
+    tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
+
+    const isHistory = tab.dataset.tab === 'history';
+    app.hidden = isHistory;
+    historyPanel.hidden = !isHistory;
+    footer.hidden = isHistory;
+
+    if (isHistory) fetchHistory(14);
+  });
+});
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 fetchStatus();
