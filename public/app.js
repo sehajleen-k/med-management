@@ -215,6 +215,57 @@ const footer       = document.getElementById('footer');
 
 const CATEGORY_LABEL = { morning: 'Morning', evening: 'Evening', as_needed: 'As Needed' };
 
+// Unique row key so Klonopin morning/evening/as_needed get separate rows
+function rowKey(log) { return `${log.name}||${log.category}`; }
+function rowLabel(log) { return `${log.name} (${CATEGORY_LABEL[log.category]})`; }
+
+function shortDate(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric',
+  });
+}
+
+// Build pivot: rows = meds, columns = dates, cells = time taken or ''
+function buildPivot(logs, allDates, allRows) {
+  // pivot[rowKey][date] = array of times (as_needed can have multiple)
+  const pivot = {};
+  for (const log of logs) {
+    const k = rowKey(log);
+    if (!pivot[k]) pivot[k] = {};
+    if (!pivot[k][log.date]) pivot[k][log.date] = [];
+    pivot[k][log.date].push(formatTime(log.taken_at));
+  }
+  return pivot;
+}
+
+function buildCsvContent(allRows, allDates, pivot) {
+  const header = ['Medication', 'Category', ...allDates.map(shortDate)];
+  const lines = [header.join(',')];
+  for (const row of allRows) {
+    const cells = [
+      `"${row.name}"`,
+      `"${CATEGORY_LABEL[row.category]}"`,
+      ...allDates.map(date => {
+        const times = pivot[row.key]?.[date];
+        return times ? `"${times.join(', ')}"` : '';
+      }),
+    ];
+    lines.push(cells.join(','));
+  }
+  return lines.join('\n');
+}
+
+function downloadCsv(content, days) {
+  const blob = new Blob([content], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `arsh-meds-${days}days.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function renderHistory(logs, days) {
   historyPanel.innerHTML = '';
 
@@ -229,6 +280,7 @@ function renderHistory(logs, days) {
       <option value="30" ${days === 30 ? 'selected' : ''}>30 days</option>
       <option value="90" ${days === 90 ? 'selected' : ''}>90 days</option>
     </select>
+    <button class="btn-export" id="btn-export">Export CSV</button>
   `;
   controls.querySelector('select').addEventListener('change', (e) => {
     fetchHistory(Number(e.target.value));
@@ -240,50 +292,72 @@ function renderHistory(logs, days) {
     empty.className = 'history-empty';
     empty.textContent = 'No medications logged in this period.';
     historyPanel.appendChild(empty);
+    document.getElementById('btn-export').disabled = true;
     return;
   }
 
-  // Group by date
-  const byDate = {};
+  // Collect all unique dates (sorted asc) and all unique med rows (stable order)
+  const dateSet = new Set();
+  const rowMap  = new Map(); // key → { key, name, category }
   for (const log of logs) {
-    if (!byDate[log.date]) byDate[log.date] = [];
-    byDate[log.date].push(log);
+    dateSet.add(log.date);
+    const k = rowKey(log);
+    if (!rowMap.has(k)) rowMap.set(k, { key: k, name: log.name, category: log.category });
+  }
+  const allDates = [...dateSet].sort();                 // oldest → newest (left → right)
+  const allRows  = [...rowMap.values()];
+  const pivot    = buildPivot(logs, allDates, allRows);
+
+  // Export button
+  controls.querySelector('#btn-export').addEventListener('click', () => {
+    downloadCsv(buildCsvContent(allRows, allDates, pivot), days);
+  });
+
+  // Scrollable table wrapper
+  const wrapper = document.createElement('div');
+  wrapper.className = 'pivot-wrapper';
+
+  const table = document.createElement('table');
+  table.className = 'pivot-table';
+
+  // Header row
+  const thead = table.createTHead();
+  const hrow  = thead.insertRow();
+  const thMed = document.createElement('th');
+  thMed.textContent = 'Medication';
+  hrow.appendChild(thMed);
+  for (const date of allDates) {
+    const th = document.createElement('th');
+    th.textContent = shortDate(date);
+    hrow.appendChild(th);
   }
 
-  for (const date of Object.keys(byDate).sort().reverse()) {
-    const dayEl = document.createElement('div');
-    dayEl.className = 'history-day';
+  // Data rows
+  const tbody = table.createTBody();
+  for (const row of allRows) {
+    const tr = tbody.insertRow();
 
-    const header = document.createElement('div');
-    header.className = 'history-day-header';
-    header.textContent = formatDate(date);
-    dayEl.appendChild(header);
+    const tdName = document.createElement('td');
+    tdName.className = 'pivot-med-name';
+    tdName.textContent = rowLabel(row);
+    tr.appendChild(tdName);
 
-    for (const log of byDate[date]) {
-      const row = document.createElement('div');
-      row.className = 'history-row';
-
-      const dot = document.createElement('div');
-      dot.className = `history-dot${log.category === 'as_needed' ? ' as-needed' : ''}`;
-
-      const name = document.createElement('div');
-      name.className = 'history-med-name';
-      name.textContent = log.name;
-
-      const cat = document.createElement('div');
-      cat.className = 'history-category';
-      cat.textContent = CATEGORY_LABEL[log.category] || log.category;
-
-      const time = document.createElement('div');
-      time.className = 'history-time';
-      time.textContent = formatTime(log.taken_at);
-
-      row.append(dot, name, cat, time);
-      dayEl.appendChild(row);
+    for (const date of allDates) {
+      const td = document.createElement('td');
+      const times = pivot[row.key]?.[date];
+      if (times) {
+        td.className = 'pivot-taken';
+        td.innerHTML = `<span class="pivot-check">✓</span><span class="pivot-time">${times.join('<br>')}</span>`;
+      } else {
+        td.className = 'pivot-missed';
+        td.textContent = '–';
+      }
+      tr.appendChild(td);
     }
-
-    historyPanel.appendChild(dayEl);
   }
+
+  wrapper.appendChild(table);
+  historyPanel.appendChild(wrapper);
 }
 
 async function fetchHistory(days = 14) {
