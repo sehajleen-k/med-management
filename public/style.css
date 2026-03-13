@@ -1,0 +1,259 @@
+/* ── Reset & Base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #eef7f4;
+  --surface:     #ffffff;
+  --primary:     #2e7d6e;
+  --primary-dk:  #235f53;
+  --accent:      #4a90a4;
+  --taken-bg:    #e8f5e9;
+  --taken-fg:    #2e7d3e;
+  --pending-bg:  #fff8e1;
+  --pending-btn: #e07b2a;
+  --pending-btn-hover: #c5661e;
+  --text:        #1a2e28;
+  --text-muted:  #5a7570;
+  --border:      #d0e8e2;
+  --shadow:      0 2px 8px rgba(46,125,110,0.10);
+  --radius:      16px;
+}
+
+html { font-size: 18px; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+header {
+  background: var(--primary);
+  color: white;
+  padding: 1.25rem 1.25rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+
+.header-inner h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.date {
+  font-size: 1rem;
+  opacity: 0.88;
+  margin-top: 0.15rem;
+}
+
+.progress {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 0.4rem;
+  background: rgba(255,255,255,0.18);
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  border-radius: 20px;
+}
+
+.refresh-indicator {
+  font-size: 0.78rem;
+  opacity: 0.7;
+  min-height: 1.1rem;
+  margin-top: 0.3rem;
+}
+
+/* ── Main ────────────────────────────────────────────────────────────────── */
+main {
+  flex: 1;
+  padding: 1.25rem;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 3rem;
+  font-size: 1.1rem;
+}
+
+/* ── Section ─────────────────────────────────────────────────────────────── */
+.section {
+  margin-bottom: 1.75rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  background: var(--border);
+  padding: 0.1rem 0.55rem;
+  border-radius: 10px;
+}
+
+/* ── Med Card ────────────────────────────────────────────────────────────── */
+.med-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.med-card.taken {
+  background: var(--taken-bg);
+  border-color: #b2dfbd;
+}
+
+.med-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.med-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.med-instructions {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+.med-taken-time {
+  font-size: 0.85rem;
+  color: var(--taken-fg);
+  font-weight: 600;
+  margin-top: 0.3rem;
+}
+
+/* ── Take Button ─────────────────────────────────────────────────────────── */
+.btn-take {
+  background: var(--pending-btn);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+  min-width: 90px;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.btn-take:hover   { background: var(--pending-btn-hover); }
+.btn-take:active  { transform: scale(0.96); }
+.btn-take:disabled {
+  background: #bbb;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Taken Checkmark ─────────────────────────────────────────────────────── */
+.checkmark {
+  font-size: 2rem;
+  color: var(--taken-fg);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* ── As-needed extra logs ────────────────────────────────────────────────── */
+.as-needed-logs {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+/* ── Toast Notification ──────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  background: var(--primary-dk);
+  color: white;
+  padding: 0.85rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease;
+  z-index: 100;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+footer {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Error Banner ────────────────────────────────────────────────────────── */
+.error-banner {
+  background: #fdecea;
+  border: 1px solid #f5c2bd;
+  color: #a93226;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+/* ── Responsive tweaks ───────────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  html { font-size: 17px; }
+  .med-card { padding: 0.9rem 1rem; }
+  .btn-take { padding: 0.65rem 0.85rem; font-size: 0.95rem; min-width: 80px; }
+}

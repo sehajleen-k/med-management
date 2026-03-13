@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Arsh's Meds" />
+  <meta name="theme-color" content="#2e7d6e" />
+  <title>Arsh's Medications</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>Arsh's Medications</h1>
+      <div id="date-display" class="date"></div>
+      <div id="progress-display" class="progress"></div>
+    </div>
+    <div id="refresh-indicator" class="refresh-indicator" aria-live="polite"></div>
+  </header>
+
+  <main id="app">
+    <div class="loading">Loading medications...</div>
+  </main>
+
+  <footer>
+    <p>Updates automatically every 30 seconds</p>
+  </footer>
+
+  <div id="toast" class="toast" aria-live="assertive"></div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
