@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { getStatus, takeMed, getHistory, addMed, deleteMed } = require('./db');
+const { getStatus, takeMed, getHistory, addMed, deleteMed, getPacificDate } = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -70,6 +70,19 @@ app.post('/api/meds', (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to add medication' });
+  }
+});
+
+// DELETE /api/logs/today — clear all of today's medication logs
+app.delete('/api/logs/today', (req, res) => {
+  try {
+    const { db } = require('./db');
+    const today = getPacificDate();
+    const result = db.prepare('DELETE FROM med_logs WHERE date = ?').run(today);
+    res.json({ success: true, deleted: result.changes, date: today });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to clear today\'s logs' });
   }
 });
 
