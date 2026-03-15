@@ -39,7 +39,6 @@ app.post('/api/take', (req, res) => {
     if (!med_id) return res.status(400).json({ error: 'med_id or med_name is required' });
 
     const result = takeMed(Number(med_id));
-    if (!result.success) return res.status(409).json(result);
     res.json(result);
   } catch (err) {
     console.error(err);
