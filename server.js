@@ -60,12 +60,12 @@ app.get('/api/history', (req, res) => {
 // POST /api/meds — add a new medication
 app.post('/api/meds', (req, res) => {
   try {
-    const { name, category, instructions } = req.body;
+    const { name, category, instructions, schedule_days } = req.body;
     if (!name || !category) return res.status(400).json({ error: 'name and category are required' });
     if (!['morning', 'evening', 'as_needed'].includes(category)) {
       return res.status(400).json({ error: 'category must be morning, evening, or as_needed' });
     }
-    res.status(201).json(addMed(name, category, instructions));
+    res.status(201).json(addMed(name, category, instructions, schedule_days));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to add medication' });

@@ -27,6 +27,11 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_med_logs_date ON med_logs(date);
 `);
 
+// Add schedule_days column if it doesn't exist (migration)
+try {
+  db.exec('ALTER TABLE meds ADD COLUMN schedule_days TEXT');
+} catch (_) { /* column already exists */ }
+
 // Returns today's date string (YYYY-MM-DD) in Pacific time
 function getPacificDate() {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -40,10 +45,22 @@ function getPacificDate() {
   return `${p.year}-${p.month}-${p.day}`;
 }
 
+// Returns today's day of week (0=Sun … 6=Sat) in Pacific time
+function getPacificDayOfWeek() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    weekday: 'short',
+  }).formatToParts(new Date());
+  const short = parts.find(p => p.type === 'weekday').value; // 'Sun','Mon',…
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(short);
+}
+
 // Returns today's meds grouped by category with taken/pending status
 function getStatus() {
   const today = getPacificDate();
-  const meds = db.prepare('SELECT * FROM meds WHERE active = 1 ORDER BY id').all();
+  const todayDow = getPacificDayOfWeek();
+  const meds = db.prepare('SELECT * FROM meds WHERE active = 1 ORDER BY id').all()
+    .filter(m => !m.schedule_days || m.schedule_days.split(',').map(Number).includes(todayDow));
   const logs = db.prepare('SELECT * FROM med_logs WHERE date = ?').all(today);
 
   const logsByMedId = {};
@@ -130,11 +147,11 @@ function getHistory(days = 7) {
     .all(cutoffDate);
 }
 
-function addMed(name, category, instructions) {
+function addMed(name, category, instructions, schedule_days) {
   const result = db
-    .prepare('INSERT INTO meds (name, category, instructions) VALUES (?, ?, ?)')
-    .run(name, category, instructions || null);
-  return { id: result.lastInsertRowid, name, category, instructions };
+    .prepare('INSERT INTO meds (name, category, instructions, schedule_days) VALUES (?, ?, ?, ?)')
+    .run(name, category, instructions || null, schedule_days || null);
+  return { id: result.lastInsertRowid, name, category, instructions, schedule_days };
 }
 
 function deleteMed(id) {
