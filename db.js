@@ -103,9 +103,9 @@ function takeMed(med_id) {
       .get(med_id, today);
     if (existing) {
       return {
-        success: false,
-        error: 'Already logged today',
+        success: true,
         already_taken: true,
+        message: `${med.name} was already logged today`,
         taken_at: existing.taken_at,
         med_name: med.name,
       };
